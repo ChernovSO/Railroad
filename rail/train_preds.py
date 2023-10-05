@@ -49,7 +49,7 @@ model.to(device)
 # Зададим параметры обучения и запустим цикл обучения
 batch_size = 12
 learning_rate = 0.001
-num_epochs = 5
+num_epochs = 10
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = DiceLoss() #так же были протестированы BCELoss, JaccardLoss
 
@@ -126,16 +126,16 @@ iou_total = 0.0
 dice_total = 0.0
 pixel_accuracy_total = 0.0
 
-# Loop through the validation dataset
+
 for batch in validation_loader:
     with torch.no_grad():
 
         image, target = batch['image'].to(device), batch['mask'].to(device)
 
-        # Perform inference
+        
         output = model(image)['out']
 
-        # Calculate predicted class labels
+        
         pred_labels = output.argmax(1)
         pred_probs = torch.softmax(output, dim=1)[0]
         pl = pred_labels.cpu().numpy()
@@ -146,18 +146,18 @@ for batch in validation_loader:
         iou = intersection / union
         iou_total += iou
 
-        # Calculate Dice coefficient
+        
         dice = (2 * intersection) / (pred_labels.sum().item() + target.sum().item())
         dice_total += dice
 
-        # Calculate pixel accuracy
+        
         pixel_accuracy = (pred_labels == target).sum().item() / target.numel()
         pixel_accuracy_total += pixel_accuracy
 
         mask_path = os.path.join(output_folder, f'_mask.png')
         cv2.imwrite(mask_path, predicted_class)
 
-# Calculate average metrics
+
 num_samples = 10
 average_iou = iou_total / num_samples
 average_dice = dice_total / num_samples
@@ -166,57 +166,3 @@ average_pixel_accuracy = pixel_accuracy_total / num_samples
 print(f"Average IoU: {average_iou:.4f}")
 print(f"Average Dice: {average_dice:.4f}")
 print(f"Average Pixel Accuracy: {average_pixel_accuracy:.4f}")
-
-#
-#
-#
-#
-#
-#
-# input_folder = 'test_data'
-#
-#
-# iou_total = 0.0
-# dice_total = 0.0
-# pixel_accuracy_total = 0.0
-#
-#
-# #Делаем и сохраняем предсказания
-# for image_file in os.listdir(input_folder):
-#     image_path = os.path.join(input_folder, image_file)
-#     img = Image.open(image_path).convert('RGB')
-#     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-#     img = transform(img)
-#     img = img.unsqueeze(0)  # Add batch dimension
-#     with torch.no_grad():
-#         output = model(img)['out']
-#     pred_probs = torch.softmax(output, dim=1)[0]
-#     pred_probs = pred_probs.cpu().numpy()
-#
-#     predicted_class = pred_probs.argmax(0)
-#     intersection = torch.logical_and(pred_labels, target).sum().item()
-#     union = torch.logical_or(pred_labels, target).sum().item()
-#     iou = intersection / union
-#     iou_total += iou
-#
-#     # Calculate Dice coefficient
-#     dice = (2 * intersection) / (pred_labels.sum().item() + target.sum().item())
-#     dice_total += dice
-#
-#     # Calculate pixel accuracy
-#     pixel_accuracy = (pred_labels == target).sum().item() / target.numel()
-#     pixel_accuracy_total += pixel_accuracy
-#     mask_path = os.path.join(output_folder, f'{os.path.splitext(image_file)[0]}_mask.png')
-#     cv2.imwrite(mask_path, predicted_class.astype('uint8'))
-#
-#
-# #считаем метрики
-# num_samples = 10
-# average_iou = iou_total / num_samples
-# average_dice = dice_total / num_samples
-# average_pixel_accuracy = pixel_accuracy_total / num_samples
-#
-# print(f"Average IoU: {average_iou:.4f}")
-# print(f"Average Dice: {average_dice:.4f}")
-# print(f"Average Pixel Accuracy: {average_pixel_accuracy:.4f}")
-#
